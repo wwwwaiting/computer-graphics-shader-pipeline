@@ -19,6 +19,35 @@ void main()
 {
   /////////////////////////////////////////////////////////////////////////////
   // Replace with your code 
-  color = vec3(1,1,1);
+  float theta = (2* M_PI * animation_seconds) / 4;  
+  //mat4 rotate = rotate_about_y(theta);
+  mat4 rotate = mat4(cos(theta), 0, -sin(theta), 0,
+							 0, 1, 0, 0,
+							 sin(theta), 0, cos(theta), 0,
+							 0, 0, 0, 1);
+	
+  // calculate v, l, n
+  vec3 v = -((view * view_pos_fs_in).xyz);
+  vec3 l = (view * vec4(1, 0.5, 0, 0) * rotate).xyz;   // rotate the light
+  v = normalize(v);
+  l = normalize(l);
+  vec3 n = normalize(normal_fs_in);
+	
+  // apply perlin noise to make up random noise
+  vec3 random1 = vec3(1, 3, 5);
+  vec3 random2 = vec3(2, 4, 6);   
+  float noise =  0.3 * perlin_noise(sphere_fs_in * random1 * random2) + 0.3 *perlin_noise(sphere_fs_in * random1)+ 0.3 *perlin_noise(sphere_fs_in * random2); 
+  noise = abs(noise * M_PI);  // avoid darkness
+
+  vec3 ka = vec3(0.05, 0.05, 0.05)*noise;
+  vec3 ks = vec3(1.0, 1.0, 1.0);
+  int p = 1000;
+  vec3 kd;
+  if (is_moon){
+    kd = vec3(0.45, 0.45, 0.45)*noise;
+  } else{
+    kd = vec3(0.2, 0.3, 0.7)*noise;
+  }
+  color = blinn_phong(ka, kd, ks, p, n, v, l); 
   /////////////////////////////////////////////////////////////////////////////
 }
